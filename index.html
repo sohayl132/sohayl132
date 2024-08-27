@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio abspielen</title>
+</head>
+<body>
+    <h1>Audio abspielen</h1>
+
+    <!-- Dropdown zur Auswahl der Datei -->
+    <label for="audioSelect">Wähle eine Audiodatei:</label>
+    <select id="audioSelect">
+        <option value="" disabled selected>Wähle eine Audiodatei</option>
+    </select>
+
+    <!-- Dropdown zur Auswahl der Tonhöhe -->
+    <label for="pitchSelect">Wähle die Tonhöhe:</label>
+    <select id="pitchSelect">
+        <option value="C">Do (C)</option>
+        <option value="D">Re (D)</option>
+        <option value="E">Mi (E)</option>
+        <!-- Weitere Tonhöhen nach Bedarf -->
+    </select>
+
+    <!-- Button zum Wechseln der Tonhöhe -->
+    <button onclick="changePitch()">Tonhöhe ändern</button>
+
+    <!-- Audio-Player -->
+    <audio id="audioPlayer" controls>
+        Ihr Browser unterstützt keine Audio-Wiedergabe.
+    </audio>
+
+    <!-- Steuerung für die BPM -->
+    <div>
+        <label for="bpmInput">Wiedergabe in BPM:</label>
+        <input type="number" id="bpmInput" name="bpmInput" min="60" max="240" value="120" onchange="changeBPM()">
+        <span id="bpmDisplay">120 BPM</span>
+    </div>
+
+    <script>
+        // Statische Liste der Audiodateien mit verschiedenen Tonhöhen
+        const audioFiles = [
+            {
+                name: 'Audio 1',
+                versions: {
+                    C: 'uploads/audio1_C.mp3',
+                    D: 'uploads/audio1_D.mp3',
+                    E: 'uploads/audio1_E.mp3'
+                },
+                bpm: 120
+            },
+            {
+                name: 'Audio 2',
+                versions: {
+                    C: 'uploads/audio2_C.mp3',
+                    D: 'uploads/audio2_D.mp3',
+                    E: 'uploads/audio2_E.mp3'
+                },
+                bpm: 100
+            },
+            // Weitere Audiodateien hier hinzufügen
+        ];
+
+        let currentAudio = null;
+        let currentPitch = 'C';
+        let referenceBPM = 120; // Standardreferenz-BPM für die Berechnung der Playback-Rate
+
+        const audioSelect = document.getElementById('audioSelect');
+        const pitchSelect = document.getElementById('pitchSelect');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const bpmInput = document.getElementById('bpmInput');
+        const bpmDisplay = document.getElementById('bpmDisplay');
+
+        // Fügt die Audiodateien zum Dropdown hinzu
+        audioFiles.forEach(audio => {
+            const option = document.createElement('option');
+            option.value = audio.name;
+            option.dataset.bpm = audio.bpm;
+            option.textContent = `${audio.name} (${audio.bpm} BPM)`;
+            audioSelect.appendChild(option);
+        });
+
+        // Datei auswählen und im Audio-Player abspielen
+        audioSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const selectedAudio = audioFiles.find(audio => audio.name === selectedOption.value);
+            referenceBPM = selectedOption.dataset.bpm;
+            currentAudio = selectedAudio;
+            loadAudioVersion();
+            bpmInput.value = referenceBPM; // Setzt den BPM-Input auf die Referenz-BPM der ausgewählten Datei
+            bpmDisplay.textContent = `${referenceBPM} BPM`;
+            updatePlaybackRate();
+        });
+
+        // Lädt die Audio-Datei in der aktuell ausgewählten Tonhöhe
+        function loadAudioVersion() {
+            if (currentAudio && currentAudio.versions[currentPitch]) {
+                audioPlayer.src = currentAudio.versions[currentPitch];
+                audioPlayer.play();
+            }
+        }
+
+        // Ändert die Tonhöhe basierend auf der Auswahl und lädt die entsprechende Datei
+        function changePitch() {
+            currentPitch = pitchSelect.value;
+            loadAudioVersion();
+        }
+
+        // Berechnet und setzt die Playback-Rate basierend auf den eingestellten BPM
+        function updatePlaybackRate() {
+            const userBPM = bpmInput.value;
+            const playbackRate = userBPM / referenceBPM; // Verhältnis der gewünschten BPM zur Referenz-BPM
+            audioPlayer.playbackRate = playbackRate;
+            bpmDisplay.textContent = `${userBPM} BPM`;
+        }
+
+        // Wenn die BPM geändert werden
+        function changeBPM() {
+            updatePlaybackRate();
+        }
+
+        // Standardmäßig die erste Datei abspielen
+        window.onload = function() {
+            if (audioSelect.options.length > 1) {
+                audioSelect.selectedIndex = 1; // Wähle die erste Option aus
+                const event = new Event('change'); // Simuliere ein "change"-Event
+                audioSelect.dispatchEvent(event); // Löst das Event aus
+            }
+        };
+    </script>
+</body>
+</html>
